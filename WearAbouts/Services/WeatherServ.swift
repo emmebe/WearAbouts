@@ -15,7 +15,9 @@ class WeatherService {
         completion: @escaping (Result<[GeocodeResult], Error>) -> Void
     ) {
         let encodedCity = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        guard let url = URL(string: "https://geocoding-api.open-meteo.com/v1/search?name=\(encodedCity)&count=10") else {
+        let urlString = "https://geocoding-api.open-meteo.com/v1/search?name=\(encodedCity)&count=10&language=en&format=json"
+        
+        guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1)))
             return
         }
@@ -46,7 +48,9 @@ class WeatherService {
         lon: Double,
         completion: @escaping (Result<WeatherResponse, Error>) -> Void
     ) {
-        guard let url = URL(string: "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current=temperature_2m,precipitation") else {
+        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current=temperature_2m,precipitation"
+        
+        guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1)))
             return
         }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-// Data models for Geocoding API
+// MARK: - Geocoding Models
 struct GeocodeResponse: Codable, Sendable {
     let results: [GeocodeResult]?
 }
@@ -19,9 +19,17 @@ struct GeocodeResult: Codable, Sendable, Identifiable {
     let longitude: Double
     let country: String
     let admin1: String?
+    
+    var displayName: String {
+        if let state = admin1 {
+            return "\(name), \(state), \(country)"
+        } else {
+            return "\(name), \(country)"
+        }
+    }
 }
 
-// Data models for Weather API
+// MARK: - Weather Models
 struct WeatherResponse: Codable, Sendable {
     let current: CurrentWeather
 }
@@ -29,4 +37,17 @@ struct WeatherResponse: Codable, Sendable {
 struct CurrentWeather: Codable, Sendable {
     let temperature_2m: Double
     let precipitation: Double
+}
+
+// MARK: - Wikipedia Models
+struct WikipediaResponse: Codable {
+    let query: WikiQuery?
+}
+
+struct WikiQuery: Codable {
+    let pages: [String: WikiPage]?
+}
+
+struct WikiPage: Codable {
+    let extract: String?
 }
