@@ -142,7 +142,7 @@ struct MapPage: View {
                                         isCelsius.toggle()
                                         updateTemperatureDisplay()
                                     }) {
-                                        Text(isCelsius ? "°C" : "°F")
+                                        Text(isCelsius ? "°F" : "°C")
                                     }
                                     .secondaryButton()
                                 }

@@ -13,8 +13,15 @@ class UnsplashService {
     private static let accessKey = "cTyqggMFRZVEZ46mFM3ZonW0bvY6FGGzNj8_9mmX9HU"
     
     static func searchPhotos(query: String, completion: @escaping (Result<[UnsplashPhoto], Error>) -> Void) {
-        let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let urlString = "https://api.unsplash.com/search/photos?query=\(encodedQuery)&per_page=20&client_id=\(accessKey)"
+        // These tags ensure only fashion/style results are returned
+        let mandatoryFashionTags = "fashion style clothes outfits"
+        
+        // Combine user query with your mandatory tags
+        let combinedQuery = "\(query) \(mandatoryFashionTags)"
+        let encodedQuery = combinedQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        
+        // Added '&content_filter=high' to ensure high-quality editorial results
+        let urlString = "https://api.unsplash.com/search/photos?query=\(encodedQuery)&per_page=20&content_filter=high&client_id=\(accessKey)"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1)))
