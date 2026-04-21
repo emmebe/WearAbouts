@@ -67,7 +67,7 @@ struct MapPage: View {
                                         withAnimation {
                                             selectedCity = city
                                             getWeather(lat: city.latitude, lon: city.longitude)
-                                            getCulturalInfo(country: city.country)
+                                            getCulturalInfo(city: city.name, country: city.country)
                                         }
                                     }) {
                                         HStack {
@@ -298,14 +298,25 @@ struct MapPage: View {
         }
     }
     
-    func getCulturalInfo(country: String) {
-        WikipediaService.getCulturalInfo(country: country) { result in
+    func getCulturalInfo(city: String, country: String) {
+        let fallbackInfo = CulturalDressCodeService.getDressCode(country: country).formattedGuidance
+        
+        AICulturalService.getAICulturalGuidance(city: city, country: country) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let info):
                     culturalInfo = info
                 case .failure:
-                    culturalInfo = "General tip: Research local customs before visiting. Many cultures value modest dress, especially at religious sites."
+                    WikipediaService.getCulturalInfo(country: country) { wikiResult in
+                        DispatchQueue.main.async {
+                            switch wikiResult {
+                            case .success(let info):
+                                culturalInfo = info == "Cultural information not available" ? fallbackInfo : info
+                            case .failure:
+                                culturalInfo = fallbackInfo
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -356,16 +367,7 @@ struct MapPage: View {
     }
     
     func determineStrictness(country: String) -> String {
-        let strictCountries = ["Saudi Arabia", "Iran", "United Arab Emirates", "Qatar", "Afghanistan"]
-        let moderateCountries = ["India", "Thailand", "Malaysia", "Indonesia", "Turkey", "Egypt", "Morocco"]
-        
-        if strictCountries.contains(country) {
-            return "Strict"
-        } else if moderateCountries.contains(country) {
-            return "Moderate"
-        } else {
-            return "Casual"
-        }
+        CulturalDressCodeService.getDressCode(country: country).strictnessLevel
     }
     
     func strictnessColor(_ level: String) -> Color {

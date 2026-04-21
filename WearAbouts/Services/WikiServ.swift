@@ -34,14 +34,7 @@ class WikipediaService {
             }
             
             do {
-                let result = try JSONDecoder().decode(WikipediaResponse.self, from: data)
-                
-                // Extract the text from the nested structure
-                if let pages = result.query?.pages,
-                   let page = pages.values.first,
-                   let extract = page.extract {
-                    
-                    // Extract dress-related keywords
+                if let extract = try extractWikipediaText(from: data) {
                     let dressInfo = extractDressInfo(from: extract)
                     completion(.success(dressInfo))
                 } else {
@@ -74,5 +67,25 @@ class WikipediaService {
         }
         
         return relevantSentences.joined(separator: ". ") + "."
+    }
+    
+    private static func extractWikipediaText(from data: Data) throws -> String? {
+        guard
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let query = json["query"] as? [String: Any],
+            let pages = query["pages"] as? [String: Any]
+        else {
+            throw NSError(domain: "Invalid Wikipedia response", code: -1)
+        }
+        
+        for value in pages.values {
+            if let page = value as? [String: Any],
+               let extract = page["extract"] as? String,
+               !extract.isEmpty {
+                return extract
+            }
+        }
+        
+        return nil
     }
 }

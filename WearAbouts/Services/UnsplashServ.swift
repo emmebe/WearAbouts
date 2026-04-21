@@ -8,27 +8,85 @@
 import Foundation
 
 class UnsplashService {
+    private enum ServiceError: LocalizedError {
+        case missingAccessKey
+        case invalidURL
+        case requestFailed(statusCode: Int, message: String)
+        
+        var errorDescription: String? {
+            switch self {
+            case .missingAccessKey:
+                return "Unsplash access key is missing. Set UNSPLASH_ACCESS_KEY in the scheme environment or WearAbouts/Secrets.plist."
+            case .invalidURL:
+                return "Could not build the Unsplash request URL."
+            case .requestFailed(let statusCode, let message):
+                return "Unsplash request failed (\(statusCode)): \(message)"
+            }
+        }
+    }
     
-    // PASTE YOUR UNSPLASH ACCESS KEY HERE
-    private static let accessKey = "cTyqggMFRZVEZ46mFM3ZonW0bvY6FGGzNj8_9mmX9HU"
+    private static var accessKey: String? {
+        let envKey = ProcessInfo.processInfo.environment["UNSPLASH_ACCESS_KEY"]?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let envKey, !envKey.isEmpty, envKey != "YOUR_UNSPLASH_ACCESS_KEY_HERE" {
+            return envKey
+        }
+        
+        let bundleKey = Bundle.main.object(forInfoDictionaryKey: "UNSPLASH_ACCESS_KEY") as? String
+        let trimmedBundleKey = bundleKey?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let trimmedBundleKey, !trimmedBundleKey.isEmpty, trimmedBundleKey != "YOUR_UNSPLASH_ACCESS_KEY_HERE" {
+            return trimmedBundleKey
+        }
+        
+        if
+            let secretsURL = Bundle.main.url(forResource: "Secrets", withExtension: "plist"),
+            let secrets = NSDictionary(contentsOf: secretsURL) as? [String: Any],
+            let plistKey = secrets["UNSPLASH_ACCESS_KEY"] as? String
+        {
+            let trimmedPlistKey = plistKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedPlistKey.isEmpty, trimmedPlistKey != "YOUR_UNSPLASH_ACCESS_KEY_HERE" {
+                return trimmedPlistKey
+            }
+        }
+        
+        return nil
+    }
+    
+    static func searchFashionPhotos(location: String = "global", completion: @escaping (Result<[UnsplashPhoto], Error>) -> Void) {
+        let fashionQueries = [
+            "\(location) street style fashion",
+            "\(location) street fashion outfit",
+            "\(location) fashion style",
+            "street style \(location)",
+            "\(location) fashion week",
+            "\(location) outfit inspiration"
+        ]
+        
+        let query = fashionQueries.randomElement() ?? "street fashion style"
+        searchPhotos(query: query, completion: completion)
+    }
     
     static func searchPhotos(query: String, completion: @escaping (Result<[UnsplashPhoto], Error>) -> Void) {
-        // These tags ensure only fashion/style results are returned
-        let mandatoryFashionTags = "fashion style clothes outfits"
-        
-        // Combine user query with your mandatory tags
-        let combinedQuery = "\(query) \(mandatoryFashionTags)"
-        let encodedQuery = combinedQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        
-        // Added '&content_filter=high' to ensure high-quality editorial results
-        let urlString = "https://api.unsplash.com/search/photos?query=\(encodedQuery)&per_page=20&content_filter=high&client_id=\(accessKey)"
-        
-        guard let url = URL(string: urlString) else {
-            completion(.failure(NSError(domain: "Invalid URL", code: -1)))
+        guard let accessKey else {
+            completion(.failure(ServiceError.missingAccessKey))
             return
         }
         
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        var components = URLComponents(string: "https://api.unsplash.com/search/photos")
+        components?.queryItems = [
+            URLQueryItem(name: "query", value: query),
+            URLQueryItem(name: "per_page", value: "30"),
+            URLQueryItem(name: "orientation", value: "portrait")
+        ]
+        
+        guard let url = components?.url else {
+            completion(.failure(ServiceError.invalidURL))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Client-ID \(accessKey)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -40,11 +98,47 @@ class UnsplashService {
             }
             
             do {
-                let result = try JSONDecoder().decode(UnsplashResponse.self, from: data)
-                completion(.success(result.results))
+                if let httpResponse = response as? HTTPURLResponse,
+                   !(200...299).contains(httpResponse.statusCode) {
+                    let message = String(decoding: data, as: UTF8.self)
+                    completion(.failure(ServiceError.requestFailed(statusCode: httpResponse.statusCode, message: message)))
+                    return
+                }
+                
+                let photos = try parsePhotos(from: data)
+                completion(.success(photos))
             } catch {
                 completion(.failure(error))
             }
         }.resume()
+    }
+    
+    private static func parsePhotos(from data: Data) throws -> [UnsplashPhoto] {
+        guard
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let results = json["results"] as? [[String: Any]]
+        else {
+            throw ServiceError.requestFailed(statusCode: -1, message: "Unsplash returned malformed photo data.")
+        }
+        
+        return results.compactMap { item in
+            guard
+                let id = item["id"] as? String,
+                let urlsDict = item["urls"] as? [String: Any],
+                let small = urlsDict["small"] as? String,
+                let regular = urlsDict["regular"] as? String,
+                let userDict = item["user"] as? [String: Any],
+                let userName = userDict["name"] as? String
+            else {
+                return nil
+            }
+            
+            return UnsplashPhoto(
+                id: id,
+                urls: UnsplashURLs(small: small, regular: regular),
+                user: UnsplashUser(name: userName),
+                description: item["description"] as? String
+            )
+        }
     }
 }

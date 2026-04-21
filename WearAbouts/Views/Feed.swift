@@ -11,6 +11,7 @@ struct HomePage: View {
     @State private var photos: [UnsplashPhoto] = []
     @State private var isLoading: Bool = false
     @State private var searchQuery: String = "travel fashion street style"
+    @State private var errorMessage: String = ""
     
     let columns = [
         GridItem(.flexible(), spacing: 8),
@@ -39,6 +40,9 @@ struct HomePage: View {
                 HStack {
                     TextField("Search styles (e.g., Tokyo street fashion)", text: $searchQuery)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .onSubmit {
+                            loadPhotos()
+                        }
                     
                     Button(action: loadPhotos) {
                         Image(systemName: "arrow.clockwise")
@@ -46,6 +50,14 @@ struct HomePage: View {
                     }
                 }
                 .padding(.horizontal)
+                
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                }
                 
                 // Photo grid
                 if isLoading {
@@ -99,7 +111,14 @@ struct HomePage: View {
     }
     
     func loadPhotos() {
+        guard !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            errorMessage = "Enter a destination or style to search for inspiration."
+            photos = []
+            return
+        }
+        
         isLoading = true
+        errorMessage = ""
         
         UnsplashService.searchPhotos(query: searchQuery) { result in
             DispatchQueue.main.async {
@@ -107,8 +126,10 @@ struct HomePage: View {
                 switch result {
                 case .success(let fetchedPhotos):
                     photos = fetchedPhotos
+                    errorMessage = fetchedPhotos.isEmpty ? "No style photos found for that search." : ""
                 case .failure(let error):
-                    print("Error loading photos: \(error)")
+                    photos = []
+                    errorMessage = error.localizedDescription
                 }
             }
         }

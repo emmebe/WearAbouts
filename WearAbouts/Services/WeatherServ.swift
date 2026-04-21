@@ -34,8 +34,8 @@ class WeatherService {
             }
             
             do {
-                let result = try JSONDecoder().decode(GeocodeResponse.self, from: data)
-                completion(.success(result.results ?? []))
+                let results = try parseGeocodeResults(from: data)
+                completion(.success(results))
             } catch {
                 completion(.failure(error))
             }
@@ -67,11 +67,57 @@ class WeatherService {
             }
             
             do {
-                let result = try JSONDecoder().decode(WeatherResponse.self, from: data)
+                let result = try parseWeatherResponse(from: data)
                 completion(.success(result))
             } catch {
                 completion(.failure(error))
             }
         }.resume()
+    }
+    
+    private static func parseGeocodeResults(from data: Data) throws -> [GeocodeResult] {
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw NSError(domain: "Invalid geocode response", code: -1)
+        }
+        
+        let results = json["results"] as? [[String: Any]] ?? []
+        return results.compactMap { item in
+            guard
+                let id = item["id"] as? Int,
+                let name = item["name"] as? String,
+                let latitude = item["latitude"] as? Double,
+                let longitude = item["longitude"] as? Double,
+                let country = item["country"] as? String
+            else {
+                return nil
+            }
+            
+            return GeocodeResult(
+                id: id,
+                name: name,
+                latitude: latitude,
+                longitude: longitude,
+                country: country,
+                admin1: item["admin1"] as? String
+            )
+        }
+    }
+    
+    private static func parseWeatherResponse(from data: Data) throws -> WeatherResponse {
+        guard
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let current = json["current"] as? [String: Any],
+            let temperature = current["temperature_2m"] as? Double,
+            let precipitation = current["precipitation"] as? Double
+        else {
+            throw NSError(domain: "Invalid weather response", code: -1)
+        }
+        
+        return WeatherResponse(
+            current: CurrentWeather(
+                temperature_2m: temperature,
+                precipitation: precipitation
+            )
+        )
     }
 }

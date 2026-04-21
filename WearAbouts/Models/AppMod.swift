@@ -50,23 +50,23 @@ struct LuggageItem: Codable, Identifiable {
 }
 
 // MARK: - Unsplash Models
-struct UnsplashResponse: Codable {
+struct UnsplashResponse: Codable, Sendable {
     let results: [UnsplashPhoto]
 }
 
-struct UnsplashPhoto: Codable, Identifiable {
+struct UnsplashPhoto: Codable, Identifiable, Sendable {
     let id: String
     let urls: UnsplashURLs
     let user: UnsplashUser
     let description: String?
 }
 
-struct UnsplashURLs: Codable {
+struct UnsplashURLs: Codable, Sendable {
     let small: String
     let regular: String
 }
 
-struct UnsplashUser: Codable {
+struct UnsplashUser: Codable, Sendable {
     let name: String
 }
 
