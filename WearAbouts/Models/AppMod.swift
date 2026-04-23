@@ -49,25 +49,28 @@ struct LuggageItem: Codable, Identifiable {
     }
 }
 
-// MARK: - Unsplash Models
-struct UnsplashResponse: Codable, Sendable {
-    let results: [UnsplashPhoto]
-}
-
-struct UnsplashPhoto: Codable, Identifiable, Sendable {
+struct UnsplashPhoto: Identifiable {
     let id: String
     let urls: UnsplashURLs
     let user: UnsplashUser
     let description: String?
+    let location: UnsplashLocation?   // ✅ ADD THIS
 }
 
-struct UnsplashURLs: Codable, Sendable {
+struct UnsplashURLs {
     let small: String
     let regular: String
 }
 
-struct UnsplashUser: Codable, Sendable {
+struct UnsplashUser {
     let name: String
+}
+
+// ✅ ADD THIS ENTIRE STRUCT (NEW)
+struct UnsplashLocation {
+    let name: String?
+    let city: String?
+    let country: String?
 }
 
 // MARK: - Country Info
@@ -79,4 +82,21 @@ struct CountryResponse: Codable {
 
 struct CountryName: Codable {
     let common: String
+}
+
+// MARK: - Saved Outfit
+struct SavedOutfit: Codable, Identifiable {
+    let id: String
+    let imageURL: String
+    let photographer: String
+    let savedDate: Date
+    let notes: String?
+    
+    init(from photo: UnsplashPhoto, notes: String? = nil) {
+        self.id = UUID().uuidString
+        self.imageURL = photo.urls.regular
+        self.photographer = photo.user.name
+        self.savedDate = Date()
+        self.notes = notes
+    }
 }

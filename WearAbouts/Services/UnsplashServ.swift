@@ -133,12 +133,25 @@ class UnsplashService {
                 return nil
             }
             
+            // 🔹 NEW: LOCATION PARSING
+            var location: UnsplashLocation? = nil
+            if let locDict = item["location"] as? [String: Any] {
+                location = UnsplashLocation(
+                    name: locDict["name"] as? String,
+                    city: locDict["city"] as? String,
+                    country: locDict["country"] as? String
+                )
+            }
+            
             return UnsplashPhoto(
                 id: id,
                 urls: UnsplashURLs(small: small, regular: regular),
                 user: UnsplashUser(name: userName),
-                description: item["description"] as? String
+                description: item["description"] as? String,
+                location: location
             )
         }
     }
 }
+
+

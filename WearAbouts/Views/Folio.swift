@@ -9,9 +9,10 @@ import SwiftUI
 
 struct ProfilePage: View {
     @State private var savedDestinations: [SavedDestination] = []
+    @State private var savedOutfits: [SavedOutfit] = []
     @State private var luggageItems: [LuggageItem] = []
     @State private var showAddLuggage: Bool = false
-    @State private var selectedTab: Int = 0 // 0 = Saved, 1 = Luggage
+    @State private var selectedTab: Int = 0 // 0 = Saved Places, 1 = Saved Outfits, 2 = Luggage
     
     var body: some View {
         ZStack {
@@ -24,7 +25,7 @@ struct ProfilePage: View {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    gradient: Gradient(colors: [Color.appPrimary, Color.appSecondary]),
+                                    gradient: Gradient(colors: [Color.brandPrimary, Color.brandDark]),
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -35,11 +36,10 @@ struct ProfilePage: View {
                             .font(.system(size: 40))
                             .foregroundColor(.white)
                     }
-                    .shadow(color: Color.appPrimary.opacity(0.3), radius: 10, x: 0, y: 5)
+                    .shadow(color: Color.brandPrimary.opacity(0.3), radius: 10, x: 0, y: 5)
                     
                     Text("My Travel Profile")
-                        .font(.title3)
-                        .fontWeight(.bold)
+                        .font(AppFont.title2)
                         .foregroundColor(.appTextPrimary)
                 }
                 .padding(.vertical)
@@ -48,26 +48,38 @@ struct ProfilePage: View {
                 HStack(spacing: 0) {
                     Button(action: { selectedTab = 0 }) {
                         VStack(spacing: 4) {
-                            Image(systemName: "bookmark.fill")
-                            Text("Saved")
-                                .font(.caption)
+                            Image(systemName: "mappin.circle.fill")
+                            Text("Places")
+                                .font(AppFont.caption)
                         }
-                        .foregroundColor(selectedTab == 0 ? .appPrimary : .appTextSecondary)
+                        .foregroundColor(selectedTab == 0 ? .brandPrimary : .appTextSecondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(selectedTab == 0 ? Color.appPrimary.opacity(0.1) : Color.clear)
+                        .background(selectedTab == 0 ? Color.brandPrimary.opacity(0.1) : Color.clear)
                     }
                     
                     Button(action: { selectedTab = 1 }) {
                         VStack(spacing: 4) {
-                            Image(systemName: "bag.fill")
-                            Text("Luggage")
-                                .font(.caption)
+                            Image(systemName: "bookmark.fill")
+                            Text("Outfits")
+                                .font(AppFont.caption)
                         }
-                        .foregroundColor(selectedTab == 1 ? .appAccent : .appTextSecondary)
+                        .foregroundColor(selectedTab == 1 ? .brandAccent : .appTextSecondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(selectedTab == 1 ? Color.appAccent.opacity(0.1) : Color.clear)
+                        .background(selectedTab == 1 ? Color.brandAccent.opacity(0.1) : Color.clear)
+                    }
+                    
+                    Button(action: { selectedTab = 2 }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "bag.fill")
+                            Text("Luggage")
+                                .font(AppFont.caption)
+                        }
+                        .foregroundColor(selectedTab == 2 ? .brandDark : .appTextSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(selectedTab == 2 ? Color.brandDark.opacity(0.1) : Color.clear)
                     }
                 }
                 .background(Color.white)
@@ -78,6 +90,8 @@ struct ProfilePage: View {
                 // Content
                 if selectedTab == 0 {
                     savedDestinationsView
+                } else if selectedTab == 1 {
+                    savedOutfitsView
                 } else {
                     luggageView
                 }
@@ -98,23 +112,47 @@ struct ProfilePage: View {
         ScrollView {
             VStack(spacing: Spacing.medium) {
                 if savedDestinations.isEmpty {
-                    VStack(spacing: Spacing.medium) {
-                        Image(systemName: "mappin.slash")
-                            .font(.system(size: 50))
-                            .foregroundColor(.appTextSecondary)
-                        Text("No saved destinations yet")
-                            .foregroundColor(.appTextSecondary)
-                        Text("Save destinations from the Map page")
-                            .font(.caption)
-                            .foregroundColor(.appTextSecondary)
-                    }
-                    .padding(.top, 60)
+                    emptyState(
+                        icon: "mappin.slash",
+                        title: "No saved destinations yet",
+                        subtitle: "Save destinations from the Map page"
+                    )
                 } else {
                     ForEach(savedDestinations) { destination in
                         SavedDestinationCard(destination: destination, onDelete: {
                             StorageService.removeDestination(id: destination.id)
                             loadData()
                         })
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            .padding(.vertical)
+        }
+    }
+    
+    var savedOutfitsView: some View {
+        ScrollView {
+            VStack(spacing: Spacing.medium) {
+                if savedOutfits.isEmpty {
+                    emptyState(
+                        icon: "bookmark.slash",
+                        title: "No saved outfits yet",
+                        subtitle: "Long press photos on the home feed to save them"
+                    )
+                } else {
+                    let columns = [
+                        GridItem(.flexible(), spacing: 10),
+                        GridItem(.flexible(), spacing: 10)
+                    ]
+                    
+                    LazyVGrid(columns: columns, spacing: 10) {
+                        ForEach(savedOutfits) { outfit in
+                            SavedOutfitCard(outfit: outfit, onDelete: {
+                                StorageService.removeOutfit(id: outfit.id)
+                                loadData()
+                            })
+                        }
                     }
                     .padding(.horizontal)
                 }
@@ -138,17 +176,11 @@ struct ProfilePage: View {
             ScrollView {
                 VStack(spacing: Spacing.medium) {
                     if luggageItems.isEmpty {
-                        VStack(spacing: Spacing.medium) {
-                            Image(systemName: "bag")
-                                .font(.system(size: 50))
-                                .foregroundColor(.appTextSecondary)
-                            Text("Your luggage is empty")
-                                .foregroundColor(.appTextSecondary)
-                            Text("Add items to build your travel wardrobe")
-                                .font(.caption)
-                                .foregroundColor(.appTextSecondary)
-                        }
-                        .padding(.top, 40)
+                        emptyState(
+                            icon: "bag",
+                            title: "Your luggage is empty",
+                            subtitle: "Add items to build your travel wardrobe"
+                        )
                     } else {
                         ForEach(luggageItems) { item in
                             LuggageItemCard(item: item, onDelete: {
@@ -164,11 +196,75 @@ struct ProfilePage: View {
         }
     }
     
+    func emptyState(icon: String, title: String, subtitle: String) -> some View {
+        VStack(spacing: Spacing.medium) {
+            ZStack {
+                Circle()
+                    .fill(Color.brandPrimary.opacity(0.1))
+                    .frame(width: 100, height: 100)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 50))
+                    .foregroundColor(.brandPrimary)
+            }
+            
+            VStack(spacing: Spacing.small) {
+                Text(title)
+                    .font(AppFont.headline)
+                    .foregroundColor(.appTextPrimary)
+                Text(subtitle)
+                    .font(AppFont.caption)
+                    .foregroundColor(.appTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.top, 60)
+    }
+    
     func loadData() {
         savedDestinations = StorageService.getSavedDestinations()
+        savedOutfits = StorageService.getSavedOutfits()
         luggageItems = StorageService.getLuggageItems()
     }
 }
+
+// MARK: - Saved Outfit Card
+struct SavedOutfitCard: View {
+    let outfit: SavedOutfit
+    let onDelete: () -> Void
+    
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            AsyncImage(url: URL(string: outfit.imageURL)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 200)
+                    .clipped()
+                    .cornerRadius(16)
+            } placeholder: {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(height: 200)
+            }
+            
+            // Delete button
+            Button(action: onDelete) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(.white)
+                    .background(
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 28, height: 28)
+                    )
+            }
+            .padding(8)
+        }
+    }
+}
+
+// Keep existing SavedDestinationCard, LuggageItemCard, etc...
 
 struct SavedDestinationCard: View {
     let destination: SavedDestination
@@ -179,10 +275,10 @@ struct SavedDestinationCard: View {
             HStack {
                 VStack(alignment: .leading) {
                     Text(destination.cityName)
-                        .font(.headline)
+                        .font(AppFont.headline)
                         .foregroundColor(.appTextPrimary)
                     Text(destination.country)
-                        .font(.caption)
+                        .font(AppFont.caption)
                         .foregroundColor(.appTextSecondary)
                 }
                 
@@ -190,21 +286,21 @@ struct SavedDestinationCard: View {
                 
                 VStack(alignment: .trailing) {
                     Text(destination.temperature)
-                        .font(.title3)
-                        .foregroundColor(.appPrimary)
+                        .font(AppFont.title2)
+                        .foregroundColor(.brandPrimary)
                     
                     StrictnessIndicator(level: destination.strictnessLevel)
                 }
             }
             
             Text(destination.culturalNotes)
-                .font(.caption)
+                .font(AppFont.caption)
                 .foregroundColor(.appTextSecondary)
                 .lineLimit(2)
             
             HStack {
                 Text("Saved \(destination.savedDate, style: .date)")
-                    .font(.caption)
+                    .font(AppFont.caption)
                     .foregroundColor(.appTextSecondary)
                 
                 Spacer()
@@ -215,7 +311,7 @@ struct SavedDestinationCard: View {
                 }
             }
         }
-        .cardStyle()
+        .brandCard()
     }
 }
 
@@ -236,7 +332,7 @@ struct StrictnessIndicator: View {
                 .fill(color)
                 .frame(width: 8, height: 8)
             Text(level)
-                .font(.caption)
+                .font(AppFont.caption)
                 .foregroundColor(color)
         }
     }
@@ -249,23 +345,23 @@ struct LuggageItemCard: View {
     var body: some View {
         HStack {
             Image(systemName: categoryIcon(item.category))
-                .foregroundColor(.appAccent)
+                .foregroundColor(.brandAccent)
                 .font(.title2)
                 .frame(width: 40)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
-                    .font(.headline)
+                    .font(AppFont.headline)
                     .foregroundColor(.appTextPrimary)
                 
                 HStack(spacing: 8) {
                     Label(item.category, systemImage: "tag")
-                        .font(.caption)
+                        .font(AppFont.caption)
                         .foregroundColor(.appTextSecondary)
                     
                     if item.isModest {
                         Label("Modest", systemImage: "checkmark.circle.fill")
-                            .font(.caption)
+                            .font(AppFont.caption)
                             .foregroundColor(.green)
                     }
                 }
@@ -278,7 +374,7 @@ struct LuggageItemCard: View {
                     .foregroundColor(.red)
             }
         }
-        .cardStyle()
+        .brandCard()
     }
     
     func categoryIcon(_ category: String) -> String {

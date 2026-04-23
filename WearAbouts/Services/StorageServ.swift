@@ -94,4 +94,64 @@ class StorageService {
             print("Error removing luggage item: \(error)")
         }
     }
+    
+    static func getSavedOutfits() -> [SavedOutfit] {
+        guard let data = UserDefaults.standard.data(forKey: "savedOutfits") else {
+            return []
+        }
+        
+        do {
+            let outfits = try JSONDecoder().decode([SavedOutfit].self, from: data)
+            return outfits
+        } catch {
+            print("Error loading outfits: \(error)")
+            return []
+        }
+    }
+
+    static func saveOutfit(_ outfit: SavedOutfit) {
+        var outfits = getSavedOutfits()
+        
+        // Check if already saved
+        if outfits.contains(where: { $0.imageURL == outfit.imageURL }) {
+            return // Already saved
+        }
+        
+        outfits.append(outfit)
+        
+        do {
+            let data = try JSONEncoder().encode(outfits)
+            UserDefaults.standard.set(data, forKey: "savedOutfits")
+        } catch {
+            print("Error saving outfit: \(error)")
+        }
+    }
+
+    static func removeOutfit(id: String) {
+        var outfits = getSavedOutfits()
+        outfits.removeAll { $0.id == id }
+        
+        do {
+            let data = try JSONEncoder().encode(outfits)
+            UserDefaults.standard.set(data, forKey: "savedOutfits")
+        } catch {
+            print("Error removing outfit: \(error)")
+        }
+    }
+    
+    static func toggleOutfit(from photo: UnsplashPhoto) {
+        let outfit = SavedOutfit(from: photo)
+        let outfits = getSavedOutfits()
+        
+        if let existing = outfits.first(where: { $0.imageURL == outfit.imageURL }) {
+            removeOutfit(id: existing.id) // unsave
+        } else {
+            saveOutfit(outfit) // save
+        }
+    }
+    
+    static func isOutfitSaved(from photo: UnsplashPhoto) -> Bool {
+        let outfits = getSavedOutfits()
+        return outfits.contains(where: { $0.imageURL == photo.urls.small })
+    }
 }
