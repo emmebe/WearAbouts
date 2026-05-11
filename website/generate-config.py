@@ -9,9 +9,18 @@ CONFIG_PATH = Path(__file__).resolve().parent / "config.js"
 
 
 def read_env_key():
-    key = os.environ.get("UNSPLASH_ACCESS_KEY", "").strip()
-    if key and key != "YOUR_UNSPLASH_ACCESS_KEY_HERE":
-        return key
+    candidates = [
+        "UNSPLASH_ACCESS_KEY",
+        "UNSPLASH_KEY",
+        "UNSPLASH_API_KEY",
+        "NETLIFY_UNSPLASH_ACCESS_KEY",
+        "NETLIFY_UNSPLASH_KEY",
+    ]
+    for name in candidates:
+        key = os.environ.get(name, "").strip()
+        if key and key != "YOUR_UNSPLASH_ACCESS_KEY_HERE":
+            print(f"Using Unsplash key from env var: {name}")
+            return key
     return ""
 
 
