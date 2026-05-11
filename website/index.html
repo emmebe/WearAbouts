@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WearAbouts Preview</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <h1>WearAbouts</h1>
+      <nav class="topnav" aria-label="Main navigation">
+        <button class="nav-button active" data-page="home-page" aria-label="Style">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="nav-button" data-page="map-page" aria-label="Destinations">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l7-3 7 3 7-3v16l-7 3-7-3-7 3V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="nav-button" data-page="profile-page" aria-label="Profile">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </nav>
+    </header>
+
+    <main class="app-content">
+      <section id="home-page" class="page active">
+        <div class="page-header">
+          <div>
+            <h2>Style Inspiration</h2>
+            <p>Global travel fashion & local street style</p>
+          </div>
+        </div>
+
+        <div class="search-row">
+          <input id="photo-search" type="search" placeholder="Search a destination (e.g., Tokyo)">
+          <button id="photo-search-button" class="icon-button" aria-label="Search styles">
+            <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v3l4-4-4-4v3a8 8 0 1 0 8 8h-2a6 6 0 1 1-6-6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <div id="photo-error" class="message hidden"></div>
+        <div id="photo-grid" class="photo-grid"></div>
+      </section>
+
+      <section id="map-page" class="page">
+        <div class="page-header">
+          <div>
+            <h2>Destination Finder</h2>
+            <p>Search cities, view weather, and save travel destinations.</p>
+          </div>
+        </div>
+
+        <div class="search-row">
+          <input id="city-search" type="search" placeholder="Enter city name">
+          <button id="city-search-button" class="icon-button" aria-label="Search destination">
+            <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <div id="city-error" class="message hidden"></div>
+        <div id="city-results" class="card-list"></div>
+        <div id="city-details" class="detail-card hidden"></div>
+      </section>
+
+      <section id="profile-page" class="page">
+        <div class="profile-header">
+          <div>
+            <h2>My Travel Profile</h2>
+            <p>Saved places, fashion outfits, and luggage planning in one place.</p>
+          </div>
+          <div class="profile-avatar">👤</div>
+        </div>
+
+        <div class="profile-tabs">
+          <button class="profile-tab active tab-places" data-tab="places">
+            <span>📍</span>
+            <span>Places</span>
+          </button>
+          <button class="profile-tab tab-outfits" data-tab="outfits">
+            <span>🔖</span>
+            <span>Outfits</span>
+          </button>
+          <button class="profile-tab tab-luggage" data-tab="luggage">
+            <span>🧳</span>
+            <span>Luggage</span>
+          </button>
+        </div>
+
+        <div id="places-tab" class="profile-panel active">
+          <div id="saved-places" class="card-list"></div>
+        </div>
+
+        <div id="outfits-tab" class="profile-panel">
+          <div id="saved-outfits" class="photo-grid"></div>
+        </div>
+
+        <div id="luggage-tab" class="profile-panel">
+          <div class="luggage-form">
+            <input id="luggage-name" type="text" placeholder="Item name">
+            <select id="luggage-category">
+              <option value="Top">Top</option>
+              <option value="Bottom">Bottom</option>
+              <option value="Shoes">Shoes</option>
+              <option value="Accessory">Accessory</option>
+            </select>
+            <div class="checkbox-row">
+              <label><input id="luggage-modest" type="checkbox"> Modest</label>
+              <label><input id="luggage-weather" type="checkbox"> Weather-appropriate</label>
+            </div>
+            <button id="add-luggage-button" class="primary-button">
+              <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span>Add Item</span>
+            </button>
+          </div>
+          <div id="luggage-items" class="card-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
