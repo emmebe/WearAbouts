@@ -178,16 +178,68 @@ async function getPhotos(query) {
   return getFallbackPhotos(query);
 }
 
-function getFallbackPhotos(query) {
-  const encodedQuery = encodeURIComponent(buildFashionQuery(query).replace(/\s+/g, ","));
-  return Array.from({ length: 12 }, (_, index) => ({
-    id: `fallback-${index}`,
-    description: `${query} street style`,
+const curatedFallbackPhotos = [
+  {
+    id: "fashion-1",
+    description: "Street style outfit",
     urls: {
-      small: `https://source.unsplash.com/featured/400x600?${encodedQuery}&sig=${index}`,
-      regular: `https://source.unsplash.com/featured/800x1200?${encodedQuery}&sig=${index}`,
+      small: "https://images.unsplash.com/photo-1495121605193-b116b5b9c5e9?auto=format&fit=crop&w=600&q=80",
+      regular: "https://images.unsplash.com/photo-1495121605193-b116b5b9c5e9?auto=format&fit=crop&w=1200&q=80",
     },
     user: { name: "Unsplash" },
+  },
+  {
+    id: "fashion-2",
+    description: "Casual travel look",
+    urls: {
+      small: "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=600&q=80",
+      regular: "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=1200&q=80",
+    },
+    user: { name: "Unsplash" },
+  },
+  {
+    id: "fashion-3",
+    description: "Minimal street style",
+    urls: {
+      small: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=600&q=80",
+      regular: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80",
+    },
+    user: { name: "Unsplash" },
+  },
+  {
+    id: "fashion-4",
+    description: "Summer travel wardrobe",
+    urls: {
+      small: "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=600&q=80",
+      regular: "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=1200&q=80",
+    },
+    user: { name: "Unsplash" },
+  },
+  {
+    id: "fashion-5",
+    description: "Chic layered outfit",
+    urls: {
+      small: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80",
+      regular: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80",
+    },
+    user: { name: "Unsplash" },
+  },
+  {
+    id: "fashion-6",
+    description: "Urban fashion detail",
+    urls: {
+      small: "https://images.unsplash.com/photo-1495121605193-b116b5b9c5e9?auto=format&fit=crop&w=600&q=80&sat=-100",
+      regular: "https://images.unsplash.com/photo-1495121605193-b116b5b9c5e9?auto=format&fit=crop&w=1200&q=80&sat=-100",
+    },
+    user: { name: "Unsplash" },
+  },
+];
+
+function getFallbackPhotos(query) {
+  return curatedFallbackPhotos.map((photo, index) => ({
+    ...photo,
+    id: `${photo.id}-${index}`,
+    description: `${photo.description} for ${query}`,
   }));
 }
 
