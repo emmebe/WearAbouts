@@ -1,0 +1,13 @@
+[build]
+  publish = "website"
+  command = "python3 website/generate-config.py"
+
+[context.production.environment]
+  # Set UNSPLASH_ACCESS_KEY in Netlify site environment variables to enable live image search.
+  # You can also set this in Netlify UI under Site settings > Build & deploy > Environment.
+  UNSPLASH_ACCESS_KEY = ""
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
