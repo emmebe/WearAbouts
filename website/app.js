@@ -184,8 +184,8 @@ function getFallbackPhotos(query) {
     id: `fallback-${index}`,
     description: `${query} street style`,
     urls: {
-      small: `https://source.unsplash.com/random/400x600?${encodedQuery}&sig=${index}`,
-      regular: `https://source.unsplash.com/random/800x1200?${encodedQuery}&sig=${index}`,
+      small: `https://source.unsplash.com/featured/400x600?${encodedQuery}&sig=${index}`,
+      regular: `https://source.unsplash.com/featured/800x1200?${encodedQuery}&sig=${index}`,
     },
     user: { name: "Unsplash" },
   }));
